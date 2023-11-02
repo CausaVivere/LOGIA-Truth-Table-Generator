@@ -168,8 +168,10 @@ export function solveAnyFormulaTry(
     // console.log(formula, i, formula.length);
     if (
       formula.length <= 3 &&
-      formula[i] !== "(" &&
-      connectors.includes(formula[i])
+      formula[i - 1] !== "(" &&
+      connectors.includes(formula[i]) &&
+      uniqueLetters.includes(formula[i - 1]) &&
+      uniqueLetters.includes(formula[i + 1])
     )
       i = 0;
     if (uniqueLetters.includes(formula[i]))

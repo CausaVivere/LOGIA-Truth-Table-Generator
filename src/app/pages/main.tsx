@@ -1,12 +1,15 @@
 "use client";
 import {
   Button,
+  ButtonGroup,
   Checkbox,
   Input,
   Modal,
+  Pagination,
   Progress,
   Spinner,
   Text,
+  useTheme,
   useToasts,
 } from "@geist-ui/core";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +21,17 @@ import {
   solveAnyFormulaTry,
   truthTable,
 } from "~/solver";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+let cursorPositionStart: number | undefined;
 
 export default function Main() {
   const [inputFormula, setInputFormula] = useState<string>();
@@ -27,13 +41,17 @@ export default function Main() {
   const [result, setResult] = useState<string>();
   const [invalid, setInvalid] = useState(false);
   const [solve, setSolve] = useState(false);
-  const [table, setTable] = useState(false);
+  const [guide, setGuide] = useState(false);
   const [tableRes, setTableRes] = useState<Array<string[]>>([]);
+  const inputElement = useRef<HTMLInputElement>(null);
+  const mainElement = useRef<HTMLDivElement>(null);
 
   const [caseSens, setCase] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<number>(0);
+  const [index, setIndex] = useState<number>(1);
   const [maxProgress, setMaxProgress] = useState<number>(0);
+  const theme = useTheme();
 
   const { setToast } = useToasts();
 
@@ -74,14 +92,14 @@ export default function Main() {
   }, [inputFormula, caseSens]);
 
   useEffect(() => {
-    if ((solve && formula) || (table && formula)) {
+    if (formula) {
       setUniques([...getUniques(formula)]);
       setMaxProgress(Math.pow(2, getUniques(formula).length));
     }
-  }, [solve, table, caseSens, formula]);
+  }, [solve, caseSens, formula]);
 
   useEffect(() => {
-    if (solve) setValues([...new Array(uniques?.length).fill(0)]);
+    setValues([...new Array(uniques?.length).fill(0)]);
   }, [uniques]);
 
   useEffect(() => {
@@ -277,7 +295,7 @@ export default function Main() {
 
   useEffect(() => {
     if (loading) {
-      if (table && formula && uniques && !invalid) {
+      if (formula && uniques && !invalid) {
         // worker1.current?.postMessage(formula);
         // worker2.current?.postMessage(formula);
         // worker3.current?.postMessage(formula);
@@ -329,48 +347,183 @@ export default function Main() {
     }
   }, [loading]);
 
+  const addSign = (sign: string) => {
+    if (inputFormula) {
+      if (
+        !cursorPositionStart &&
+        inputElement.current &&
+        inputElement?.current?.selectionStart != null
+      )
+        cursorPositionStart = inputElement?.current?.selectionStart;
+      const newinput =
+        inputFormula.slice(0, cursorPositionStart) +
+        sign +
+        inputFormula.slice(cursorPositionStart);
+      setInputFormula(newinput);
+      if (cursorPositionStart) cursorPositionStart += sign.length;
+    } else {
+      setInputFormula(sign);
+      if (cursorPositionStart) cursorPositionStart += sign.length;
+    }
+  };
+
   return (
-    <div className="flex w-full items-center justify-center ">
+    <div className="flex h-full w-full items-center justify-center ">
       <div
         className={
-          (formula && solve) || (invalid && solve)
-            ? "absolute z-0 h-full w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
-            : "absolute z-0 h-2/5 w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
+          (formula && solve) || tableRes.length > 0 || (invalid && solve)
+            ? theme.type === "dark"
+              ? "absolute z-0 h-screen w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
+              : "absolute z-0 h-screen w-3/5  rounded-xl bg-white outline outline-4 outline-black blur-xl "
+            : theme.type === "dark"
+            ? "absolute z-0 h-3/5 w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
+            : "absolute z-0 h-3/5 w-3/5 rounded-xl bg-white outline outline-4 outline-black"
         }
       />
-      <div className="z-10 flex h-fit w-full items-center justify-center text-xl ">
+      <div
+        ref={mainElement}
+        className="z-10 flex h-screen w-full items-center justify-center overflow-scroll text-xl "
+      >
         <div
           className={
-            (formula && solve) || (invalid && solve)
-              ? "flex w-2/4 flex-col items-center justify-center gap-3 py-20"
+            (formula && solve) || tableRes.length > 0 || (invalid && solve)
+              ? "flex h-screen w-2/4 flex-col items-center justify-center gap-3 py-20"
               : "flex w-2/4 flex-col items-center justify-center gap-3 py-64"
           }
         >
+          {guide ? (
+            <div
+              className={
+                theme.type === "dark"
+                  ? "absolute left-4 z-30 rounded-xl bg-black"
+                  : "absolute left-4 z-30 rounded-xl bg-white"
+              }
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow className="mx-2 flex flex-row gap-6">
+                    <TableHead>Operator</TableHead>
+                    <TableHead>Symbol</TableHead>
+                    <TableHead>Meaning</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="mx-2 flex flex-row gap-10 text-center">
+                    <TableCell>Negation</TableCell>
+                    <TableCell>¬</TableCell>
+                    <TableCell className="px-6">NOT</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-6 text-center">
+                    <TableCell>Conjunction</TableCell>
+                    <TableCell>∧</TableCell>
+                    <TableCell className="px-9">AND</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-7 text-center">
+                    <TableCell>Disjunction</TableCell>
+                    <TableCell>∨</TableCell>
+                    <TableCell className="px-9">OR</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-7 text-center">
+                    <TableCell>Implication</TableCell>
+                    <TableCell>→</TableCell>
+                    <TableCell className="px-6">If/Then</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-4 text-center">
+                    <TableCell>Biconditional</TableCell>
+                    <TableCell>↔</TableCell>
+                    <TableCell className="px-5">If and only if</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
           <Text h4 i>
             Enter your formula :
           </Text>
-          <Input
-            onChange={(e) => setInputFormula(e.target.value)}
-            width="100%"
-            crossOrigin={undefined}
-          />
+          <div className="flex w-full flex-col items-center justify-center">
+            <Input
+              ref={inputElement}
+              value={inputFormula}
+              onChange={(e) => {
+                setInputFormula(e.target.value);
+              }}
+              onKeyUp={(e) => {
+                setInputFormula(e.currentTarget.value as string);
+                if (inputElement.current?.selectionStart)
+                  cursorPositionStart = inputElement?.current?.selectionStart;
+              }}
+              width="100%"
+              crossOrigin={undefined}
+              onBlur={() => {
+                if (inputElement?.current)
+                  cursorPositionStart = inputElement.current.selectionStart!;
+              }}
+            />
+
+            <ButtonGroup>
+              <Button
+                auto
+                onClick={() => {
+                  if (inputElement.current && cursorPositionStart) {
+                    inputElement.current.selectionStart =
+                      cursorPositionStart + 1;
+                  }
+                  addSign("∧");
+                }}
+              >
+                ∧
+              </Button>
+              <Button
+                auto
+                onClick={() => {
+                  if (inputElement.current && cursorPositionStart) {
+                    inputElement.current.selectionStart =
+                      cursorPositionStart + 1;
+                  }
+                  addSign("∨");
+                }}
+              >
+                ∨
+              </Button>
+              <Button
+                auto
+                onClick={() => {
+                  if (inputElement.current && cursorPositionStart) {
+                    inputElement.current.selectionStart =
+                      cursorPositionStart + 1;
+                  }
+                  addSign("→");
+                }}
+              >
+                →
+              </Button>
+              <Button
+                auto
+                onClick={() => {
+                  if (inputElement.current && cursorPositionStart) {
+                    inputElement.current.selectionStart =
+                      cursorPositionStart + 1;
+                  }
+                  addSign("↔");
+                }}
+              >
+                ↔
+              </Button>
+              <Button
+                auto
+                onClick={() => {
+                  if (inputElement.current && cursorPositionStart) {
+                    inputElement.current.selectionStart =
+                      cursorPositionStart + 1;
+                  }
+                  addSign("¬");
+                }}
+              >
+                ¬
+              </Button>
+            </ButtonGroup>
+          </div>
           <div className="my-2 flex flex-row gap-4">
-            <Checkbox
-              checked={false}
-              onChange={(e) => {
-                setSolve(e.target.checked);
-              }}
-            >
-              Solve
-            </Checkbox>
-            <Checkbox
-              checked={false}
-              onChange={(e) => {
-                setTable(e.target.checked);
-              }}
-            >
-              Truth Table
-            </Checkbox>
             <Checkbox
               checked={false}
               onChange={(e) => {
@@ -378,6 +531,14 @@ export default function Main() {
               }}
             >
               Case Sensitive Vars
+            </Checkbox>
+            <Checkbox
+              checked={false}
+              onChange={(e) => {
+                setGuide(e.target.checked);
+              }}
+            >
+              Show Guide
             </Checkbox>
           </div>
 
@@ -423,7 +584,13 @@ export default function Main() {
                           setValues([...values]);
                         }}
                       >
-                        <div className="py-1 text-base text-white">
+                        <div
+                          className={
+                            theme.type === "dark"
+                              ? "py-1 text-base text-white"
+                              : "py-1 text-base text-black"
+                          }
+                        >
                           {String(values[i])}
                         </div>
                       </Button>
@@ -435,35 +602,98 @@ export default function Main() {
           ) : null}
 
           {result && solve ? <Text h4>Result: {result}</Text> : null}
+          <div className="flex flex-row gap-3">
+            <div className="h-2">
+              <Button
+                auto
+                ghost={solve}
+                type={solve ? "success" : "default"}
+                onClick={() => {
+                  setSolve((last) => (last === true ? false : true));
+                }}
+              >
+                Solve
+              </Button>
+            </div>
+            <div className="h-2">
+              <Button
+                auto
+                disabled={formula === "" || !formula || invalid}
+                onClick={() => {
+                  setTableRes([]);
 
-          <div className="h-2">
-            <Button
-              auto
-              disabled={(!solve && !table) || invalid}
-              onClick={() => {
-                setTableRes([]);
-
-                setProgress(0);
-                let numCores = navigator.hardwareConcurrency || 4;
-                if (numCores > 1) {
-                  if (numCores % 2 !== 0) numCores--;
-                  if (uniques)
-                    if (Math.pow(2, uniques.length) % numCores !== 0)
-                      numCores -= 2;
-                }
-                uniques && formula
-                  ? (uniques.length <= numCores &&
-                      !(numCores >= 8 && uniques.length >= 8)) ||
-                    numCores === 1
-                    ? setTableRes(truthTable(formula, uniques))
-                    : setLoading(true)
-                  : null;
-                console.log(maxProgress);
-              }}
-            >
-              Start
-            </Button>
+                  setProgress(0);
+                  let numCores = navigator.hardwareConcurrency || 4;
+                  if (numCores > 1) {
+                    if (numCores % 2 !== 0) numCores--;
+                    if (uniques)
+                      if (Math.pow(2, uniques.length) % numCores !== 0)
+                        numCores -= 2;
+                  }
+                  uniques && formula
+                    ? (uniques.length <= numCores &&
+                        !(numCores >= 8 && uniques.length >= 8)) ||
+                      numCores === 1
+                      ? setTableRes(truthTable(formula, uniques))
+                      : setLoading(true)
+                    : null;
+                  console.log(maxProgress);
+                }}
+              >
+                Generate Truth Table
+              </Button>
+            </div>
           </div>
+          {tableRes.length > 0 ? (
+            <div
+              className={
+                theme.type === "dark"
+                  ? "my-10 flex h-1/2 w-fit flex-col items-center bg-black"
+                  : "my-10 flex h-1/2 w-fit flex-col items-center bg-white"
+              }
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {uniques?.map((letter, i) => (
+                      <TableHead key={i}>{letter}</TableHead>
+                    ))}
+                    <TableHead>
+                      {formula
+                        ? formula?.length < 40
+                          ? formula
+                          : "Result"
+                        : "Result"}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tableRes.map((row, i) =>
+                    i >= index - 1 && i < index - 1 + 100 ? (
+                      <TableRow key={i}>
+                        {row.map((value, i) => (
+                          <TableCell className="text-center" key={i}>
+                            {value}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ) : null,
+                  )}
+                </TableBody>
+              </Table>
+              <Pagination
+                count={Math.floor(tableRes.length / 100)}
+                initialPage={1}
+                onChange={(page: number) => {
+                  setIndex(page === 1 ? 1 : page * 100);
+                  mainElement.current?.scrollTo({
+                    top: 150,
+                    behavior: "smooth",
+                  });
+                }}
+              />
+            </div>
+          ) : null}
         </div>
         <Modal disableBackdropClick visible={loading}>
           <div className="flex flex-col items-center justify-center gap-3 ">
