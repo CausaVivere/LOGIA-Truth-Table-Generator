@@ -17,21 +17,9 @@ export default function HomePage() {
         <div className="gradient-background"></div>
         <div className="dots-overlay"></div>
       </div>
-      <div className="absolute right-4 top-4 z-40">
-        <Button
-          // type="secondary"
-          // ghost
-          iconRight={theme === "dark" ? <Moon /> : <Sun />}
-          px={0.6}
-          auto
-          onClick={() => {
-            switchTheme();
-          }}
-        />
-      </div>
       <div className="page-content">
         <CssBaseline />
-        <Main />
+        <Main switchTheme={switchTheme} />
       </div>
     </GeistProvider>
   );

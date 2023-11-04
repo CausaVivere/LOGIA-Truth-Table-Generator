@@ -3,6 +3,7 @@ import {
   Button,
   ButtonGroup,
   Checkbox,
+  Image,
   Input,
   Modal,
   Pagination,
@@ -30,10 +31,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Download, Moon, Sun } from "@geist-ui/icons";
+import Logo from "public/LOGIA.png";
+
+type props = { switchTheme: () => void };
 
 let cursorPositionStart: number | undefined;
 
-export default function Main() {
+export default function Main({ switchTheme }: props) {
   const [inputFormula, setInputFormula] = useState<string>();
   const [formula, setFormula] = useState<string>();
   const [uniques, setUniques] = useState<string[]>();
@@ -42,7 +47,8 @@ export default function Main() {
   const [invalid, setInvalid] = useState(false);
   const [solve, setSolve] = useState(false);
   const [guide, setGuide] = useState(false);
-  const [tableRes, setTableRes] = useState<Array<string[]>>([]);
+  const [tableRes, setTableRes] = useState<Array<number[]>>([]);
+  const [truthMode, setMode] = useState(false);
   const inputElement = useRef<HTMLInputElement>(null);
   const mainElement = useRef<HTMLDivElement>(null);
 
@@ -99,12 +105,18 @@ export default function Main() {
   }, [solve, caseSens, formula]);
 
   useEffect(() => {
+    if (formula) {
+      setTableRes([]);
+    }
+  }, [caseSens, formula]);
+
+  useEffect(() => {
     setValues([...new Array(uniques?.length).fill(0)]);
   }, [uniques]);
 
   useEffect(() => {
     console.log(values);
-    if (values && inputFormula && uniques)
+    if (values && inputFormula && uniques && solve)
       try {
         const res = solveAnyFormulaTry(
           caseSens
@@ -147,14 +159,14 @@ export default function Main() {
     }
 
     let isFinish = 0;
-    let result1: string[][] = [];
-    let result2: string[][] = [];
-    let result3: string[][] = [];
-    let result4: string[][] = [];
-    let result5: string[][] = [];
-    let result6: string[][] = [];
-    let result7: string[][] = [];
-    let result8: string[][] = [];
+    let result1: number[][] = [];
+    let result2: number[][] = [];
+    let result3: number[][] = [];
+    let result4: number[][] = [];
+    let result5: number[][] = [];
+    let result6: number[][] = [];
+    let result7: number[][] = [];
+    let result8: number[][] = [];
 
     const results = [
       result1,
@@ -168,7 +180,7 @@ export default function Main() {
     ];
     if (worker1.current)
       worker1.current.onmessage = (
-        event: MessageEvent<string[][] | number>,
+        event: MessageEvent<number[][] | number>,
       ) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
@@ -179,7 +191,7 @@ export default function Main() {
         }
       };
     if (worker2.current)
-      worker2.current.onmessage = (event: MessageEvent<string[][]>) => {
+      worker2.current.onmessage = (event: MessageEvent<number[][]>) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
         } else {
@@ -190,7 +202,7 @@ export default function Main() {
         }
       };
     if (worker3.current)
-      worker3.current.onmessage = (event: MessageEvent<string[][]>) => {
+      worker3.current.onmessage = (event: MessageEvent<number[][]>) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
         } else {
@@ -200,7 +212,7 @@ export default function Main() {
         }
       };
     if (worker4.current)
-      worker4.current.onmessage = (event: MessageEvent<string[][]>) => {
+      worker4.current.onmessage = (event: MessageEvent<number[][]>) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
         } else {
@@ -213,7 +225,7 @@ export default function Main() {
 
     if (worker5.current)
       worker5.current.onmessage = (
-        event: MessageEvent<string[][] | number>,
+        event: MessageEvent<number[][] | number>,
       ) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
@@ -224,7 +236,7 @@ export default function Main() {
         }
       };
     if (worker6.current)
-      worker6.current.onmessage = (event: MessageEvent<string[][]>) => {
+      worker6.current.onmessage = (event: MessageEvent<number[][]>) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
         } else {
@@ -236,7 +248,7 @@ export default function Main() {
       };
 
     if (worker7.current)
-      worker7.current.onmessage = (event: MessageEvent<string[][]>) => {
+      worker7.current.onmessage = (event: MessageEvent<number[][]>) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
         } else {
@@ -246,7 +258,7 @@ export default function Main() {
         }
       };
     if (worker8.current)
-      worker8.current.onmessage = (event: MessageEvent<string[][]>) => {
+      worker8.current.onmessage = (event: MessageEvent<number[][]>) => {
         if (typeof event.data === "number") {
           setProgress((last) => last + 1);
         } else {
@@ -260,7 +272,7 @@ export default function Main() {
     function finished() {
       isFinish++;
       if (isFinish === numCores) {
-        let lastRes: string[][] = [];
+        let lastRes: number[][] = [];
         for (let i = 0; i < numCores; i++) {
           lastRes = lastRes.concat(results[i]!);
         }
@@ -367,8 +379,46 @@ export default function Main() {
     }
   };
 
+  const handleDownload = (data: number[][]) => {
+    // Convert the data to a tab-delimited string
+    const huniqs = uniques;
+    huniqs?.push(
+      formula ? (formula?.length < 40 ? formula : "Result") : "Result",
+    );
+    const header = uniques!.join("\t").concat("\n");
+    const content = header?.concat(
+      data.map((row) => row.join("\t")).join("\n"),
+    );
+
+    // Set the response headers for file download
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "table.txt";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="flex h-full w-full items-center justify-center ">
+    <div className="flex h-full w-full items-center justify-center overflow-x-clip ">
+      <div
+        className={
+          theme.type === "dark"
+            ? "absolute top-0 z-0 h-3/5 w-1/5 rounded-xl bg-black opacity-90 blur-xl"
+            : "absolute top-0 z-0 h-3/5 w-1/5 rounded-xl bg-white  "
+        }
+      ></div>
+      {!solve || tableRes.length < 1 ? (
+        <div className="absolute top-16">
+          <div className="testFont">Logia</div>
+        </div>
+      ) : null}
+      {/* {!solve || tableRes.length < 1 ? (
+        <div className="absolute top-3">
+          <Image width="300px" height="150px" src={Logo.src} />
+        </div>
+      ) : null} */}
       <div
         className={
           (formula && solve) || tableRes.length > 0 || (invalid && solve)
@@ -382,12 +432,12 @@ export default function Main() {
       />
       <div
         ref={mainElement}
-        className="z-10 flex h-screen w-full items-center justify-center overflow-scroll text-xl "
+        className="z-10 flex h-screen w-full items-center justify-center overflow-x-hidden overflow-y-scroll text-xl "
       >
         <div
           className={
             (formula && solve) || tableRes.length > 0 || (invalid && solve)
-              ? "flex h-screen w-2/4 flex-col items-center justify-center gap-3 py-20"
+              ? "flex h-full w-2/4 flex-col items-center justify-center gap-3"
               : "flex w-2/4 flex-col items-center justify-center gap-3 py-64"
           }
         >
@@ -401,7 +451,7 @@ export default function Main() {
             >
               <Table>
                 <TableHeader>
-                  <TableRow className="mx-2 flex flex-row gap-6">
+                  <TableRow className="mx-1 flex flex-row gap-6 px-1">
                     <TableHead>Operator</TableHead>
                     <TableHead>Symbol</TableHead>
                     <TableHead>Meaning</TableHead>
@@ -437,9 +487,33 @@ export default function Main() {
               </Table>
             </div>
           ) : null}
-          <Text h4 i>
-            Enter your formula :
-          </Text>
+          <div className="sticky flex flex-row gap-3">
+            <div className="absolute flex flex-row gap-2 px-96">
+              <Button
+                // type="secondary"
+                // ghost
+                px={0.6}
+                auto
+                onClick={() => {
+                  setMode((last) => (last ? false : true));
+                }}
+              >
+                {truthMode ? "0/1" : "T/F"}
+              </Button>
+              <Button
+                // type="secondary"
+                // ghost
+                iconRight={theme.type === "dark" ? <Moon /> : <Sun />}
+                px={0.6}
+                auto
+                onClick={() => {
+                  switchTheme();
+                }}
+              />
+            </div>
+            <Text h4>Enter your formula :</Text>
+          </div>
+
           <div className="flex w-full flex-col items-center justify-center">
             <Input
               ref={inputElement}
@@ -591,7 +665,11 @@ export default function Main() {
                               : "py-1 text-base text-black"
                           }
                         >
-                          {String(values[i])}
+                          {truthMode
+                            ? values[i] === 1
+                              ? "T"
+                              : "F"
+                            : String(values[i])}
                         </div>
                       </Button>
                     </div>
@@ -620,6 +698,26 @@ export default function Main() {
                 auto
                 disabled={formula === "" || !formula || invalid}
                 onClick={() => {
+                  if (inputFormula && values && uniques)
+                    try {
+                      const res = solveAnyFormulaTry(
+                        caseSens
+                          ? formatFormula(inputFormula)
+                          : formatFormula(inputFormula.toUpperCase()),
+                        values,
+                        uniques.concat(["0", "1"]),
+                      );
+                      setResult(res === 1 ? "True" : "False");
+                      setTableRes([]);
+                    } catch (err) {
+                      setInvalid(true);
+                      if (!solve)
+                        setToast({
+                          text: "Invalid formula! Check syntax or forbidden characters.",
+                          type: "error",
+                        });
+                      return;
+                    }
                   setTableRes([]);
 
                   setProgress(0);
@@ -643,22 +741,44 @@ export default function Main() {
                 Generate Truth Table
               </Button>
             </div>
+            {tableRes.length > 0 ? (
+              <Button
+                auto
+                onClick={() => {
+                  setTableRes([]);
+                }}
+              >
+                Clear Table
+              </Button>
+            ) : null}
           </div>
           {tableRes.length > 0 ? (
             <div
               className={
                 theme.type === "dark"
-                  ? "my-10 flex h-1/2 w-fit flex-col items-center bg-black"
-                  : "my-10 flex h-1/2 w-fit flex-col items-center bg-white"
+                  ? "flex h-px w-fit flex-col items-center gap-2 bg-black py-10"
+                  : "flex h-px w-fit flex-col items-center gap-2 bg-white py-10"
               }
             >
+              <div className="relative ">
+                <Button
+                  // type="secondary"
+                  // ghost
+                  iconRight={<Download />}
+                  px={0.6}
+                  auto
+                  onClick={() => {
+                    handleDownload(tableRes);
+                  }}
+                />
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
                     {uniques?.map((letter, i) => (
                       <TableHead key={i}>{letter}</TableHead>
                     ))}
-                    <TableHead>
+                    <TableHead className="px-5">
                       {formula
                         ? formula?.length < 40
                           ? formula
@@ -673,7 +793,7 @@ export default function Main() {
                       <TableRow key={i}>
                         {row.map((value, i) => (
                           <TableCell className="text-center" key={i}>
-                            {value}
+                            {truthMode ? (value === 1 ? "T" : "F") : value}
                           </TableCell>
                         ))}
                       </TableRow>
@@ -687,7 +807,7 @@ export default function Main() {
                 onChange={(page: number) => {
                   setIndex(page === 1 ? 1 : page * 100);
                   mainElement.current?.scrollTo({
-                    top: 150,
+                    top: 550,
                     behavior: "smooth",
                   });
                 }}

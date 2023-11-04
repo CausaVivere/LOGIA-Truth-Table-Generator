@@ -160,3 +160,16 @@ html {
     }
   }
 }
+
+@font-face {
+  font-family: "Yapari";
+  src: url("../../public/YapariTrial-Bold.ttf");
+  font-weight: bold;
+  font-style: normal;
+}
+
+.testFont {
+  font-family: "Yapari", sans-serif;
+  font-weight: bold;
+  font-size: 2rem;
+}

@@ -411,7 +411,7 @@ export function truthTable(formula: string, staticUniques: string[]) {
   const numVariables = staticUniques.length;
   const numCombinations = Math.pow(2, numVariables);
   const truthValues = new Array(numVariables).fill(0);
-  let tableRes: Array<string[]> = [];
+  let tableRes: Array<number[]> = [];
   const uniqueLetters = staticUniques.concat(["0", "1"]);
 
   for (let i = 0; i < numCombinations; i++) {
