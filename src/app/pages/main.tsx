@@ -659,7 +659,11 @@ export default function Main({ switchTheme }: props) {
               <div
                 className={
                   formula
-                    ? formula?.length > 500
+                    ? isMobile
+                      ? formula.length > 150
+                        ? " truncate break-all text-xs"
+                        : " break-all"
+                      : formula?.length > 500
                       ? " break-all text-xs"
                       : formula?.length > 250
                       ? " break-all text-sm"
