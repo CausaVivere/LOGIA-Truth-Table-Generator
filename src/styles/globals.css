@@ -10,6 +10,8 @@ html {
 
 .background-container {
   position: absolute;
+  background-size: "cover";
+  background-clip: fixed;
   width: 100%;
   height: 100%;
 }
@@ -68,6 +70,9 @@ html {
 .page-content {
   position: relative;
   z-index: 2; /* Ensure it's on top of the dots overlay */
+  height: 100%;
+  width: 100%;
+  overflow-y: scroll;
 }
 
 @layer base {

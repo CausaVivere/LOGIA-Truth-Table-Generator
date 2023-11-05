@@ -13,7 +13,7 @@ import {
   useTheme,
   useToasts,
 } from "@geist-ui/core";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import {
   formatFormula,
   getUniques,
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Download, Moon, Sun } from "@geist-ui/icons";
 import Logo from "public/LOGIA.png";
+import { utilServerSideDeviceDetection } from "../deviceCheck";
 
 type props = { switchTheme: () => void };
 
@@ -50,7 +51,6 @@ export default function Main({ switchTheme }: props) {
   const [tableRes, setTableRes] = useState<Array<number[]>>([]);
   const [truthMode, setMode] = useState(false);
   const inputElement = useRef<HTMLInputElement>(null);
-  const mainElement = useRef<HTMLDivElement>(null);
 
   const [caseSens, setCase] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,14 @@ export default function Main({ switchTheme }: props) {
   const [maxProgress, setMaxProgress] = useState<number>(0);
   const theme = useTheme();
 
+  const [isMobile, setIsmobile] = useState(false);
+
   const { setToast } = useToasts();
+
+  async () =>
+    setIsmobile(
+      (await getServerSideProps(createContext("Default value"))).isMobile,
+    );
 
   //(A→(C→B))∧(¬D∨A)∧C∧D↔D→B
 
@@ -401,16 +408,20 @@ export default function Main({ switchTheme }: props) {
   };
 
   return (
-    <div className="flex h-full w-full items-center justify-center overflow-x-clip ">
+    <div className="flex  items-center justify-center overflow-x-clip ">
       <div
         className={
           theme.type === "dark"
-            ? "absolute top-0 z-0 h-3/5 w-1/5 rounded-xl bg-black opacity-90 blur-xl"
-            : "absolute top-0 z-0 h-3/5 w-1/5 rounded-xl bg-white  "
+            ? isMobile
+              ? "absolute top-0 z-0 h-2/5 w-3/5 rounded-xl bg-black opacity-90 blur-xl"
+              : "absolute top-0 z-0 h-2/5 w-1/5 rounded-xl bg-black opacity-90 blur-xl"
+            : isMobile
+            ? "absolute top-0 z-0 h-2/5 w-3/5 rounded-xl bg-white"
+            : "absolute top-0 z-0 h-2/5 w-1/5 rounded-xl bg-white"
         }
       ></div>
       {!solve || tableRes.length < 1 ? (
-        <div className="absolute top-16">
+        <div className="absolute top-16 z-30">
           <div className="testFont">Logia</div>
         </div>
       ) : null}
@@ -423,72 +434,43 @@ export default function Main({ switchTheme }: props) {
         className={
           (formula && solve) || tableRes.length > 0 || (invalid && solve)
             ? theme.type === "dark"
-              ? "absolute z-0 h-screen w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
-              : "absolute z-0 h-screen w-3/5  rounded-xl bg-white outline outline-4 outline-black blur-xl "
+              ? isMobile
+                ? "fixed top-0 z-0 h-full w-4/5 rounded-xl bg-black opacity-90 blur-2xl"
+                : "fixed top-0 z-0 h-full w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
+              : isMobile
+              ? "fixed top-0  z-0 h-full w-4/5  rounded-xl bg-white outline outline-4 outline-black "
+              : "fixed top-0  z-0 h-full w-3/5  rounded-xl bg-white outline outline-4 outline-black "
             : theme.type === "dark"
-            ? "absolute z-0 h-3/5 w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
+            ? isMobile
+              ? "absolute z-0 h-3/5 w-4/5 rounded-xl bg-black opacity-90 blur-2xl"
+              : "absolute z-0 h-3/5 w-3/5 rounded-xl bg-black opacity-90 blur-2xl"
+            : isMobile
+            ? "absolute z-0 h-3/5 w-4/5 rounded-xl bg-white outline outline-4 outline-black"
             : "absolute z-0 h-3/5 w-3/5 rounded-xl bg-white outline outline-4 outline-black"
         }
       />
       <div
-        ref={mainElement}
-        className="z-10 flex h-screen w-full items-center justify-center overflow-x-hidden overflow-y-scroll text-xl "
+        className={
+          (formula && solve) || (invalid && solve)
+            ? "z-10 flex h-screen w-full items-center justify-center py-32 text-xl "
+            : "z-10 flex h-screen w-full items-center justify-center  text-xl "
+        }
       >
         <div
           className={
             (formula && solve) || tableRes.length > 0 || (invalid && solve)
               ? "flex h-full w-2/4 flex-col items-center justify-center gap-3"
-              : "flex w-2/4 flex-col items-center justify-center gap-3 py-64"
+              : "flex w-2/4 flex-col items-center justify-center gap-3"
           }
         >
-          {guide ? (
+          <div className="sticky flex flex-row gap-3">
             <div
               className={
-                theme.type === "dark"
-                  ? "absolute left-4 z-30 rounded-xl bg-black"
-                  : "absolute left-4 z-30 rounded-xl bg-white"
+                isMobile
+                  ? "absolute flex flex-row gap-2 px-96"
+                  : "absolute flex flex-row gap-2 px-52"
               }
             >
-              <Table>
-                <TableHeader>
-                  <TableRow className="mx-1 flex flex-row gap-6 px-1">
-                    <TableHead>Operator</TableHead>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Meaning</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow className="mx-2 flex flex-row gap-10 text-center">
-                    <TableCell>Negation</TableCell>
-                    <TableCell>¬</TableCell>
-                    <TableCell className="px-6">NOT</TableCell>
-                  </TableRow>
-                  <TableRow className="mx-2 flex flex-row gap-6 text-center">
-                    <TableCell>Conjunction</TableCell>
-                    <TableCell>∧</TableCell>
-                    <TableCell className="px-9">AND</TableCell>
-                  </TableRow>
-                  <TableRow className="mx-2 flex flex-row gap-7 text-center">
-                    <TableCell>Disjunction</TableCell>
-                    <TableCell>∨</TableCell>
-                    <TableCell className="px-9">OR</TableCell>
-                  </TableRow>
-                  <TableRow className="mx-2 flex flex-row gap-7 text-center">
-                    <TableCell>Implication</TableCell>
-                    <TableCell>→</TableCell>
-                    <TableCell className="px-6">If/Then</TableCell>
-                  </TableRow>
-                  <TableRow className="mx-2 flex flex-row gap-4 text-center">
-                    <TableCell>Biconditional</TableCell>
-                    <TableCell>↔</TableCell>
-                    <TableCell className="px-5">If and only if</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          ) : null}
-          <div className="sticky flex flex-row gap-3">
-            <div className="absolute flex flex-row gap-2 px-96">
               <Button
                 // type="secondary"
                 // ghost
@@ -541,6 +523,7 @@ export default function Main({ switchTheme }: props) {
                   if (inputElement.current && cursorPositionStart) {
                     inputElement.current.selectionStart =
                       cursorPositionStart + 1;
+                    inputElement.current.focus();
                   }
                   addSign("∧");
                 }}
@@ -553,6 +536,7 @@ export default function Main({ switchTheme }: props) {
                   if (inputElement.current && cursorPositionStart) {
                     inputElement.current.selectionStart =
                       cursorPositionStart + 1;
+                    inputElement.current.focus();
                   }
                   addSign("∨");
                 }}
@@ -565,6 +549,7 @@ export default function Main({ switchTheme }: props) {
                   if (inputElement.current && cursorPositionStart) {
                     inputElement.current.selectionStart =
                       cursorPositionStart + 1;
+                    inputElement.current.focus();
                   }
                   addSign("→");
                 }}
@@ -577,6 +562,7 @@ export default function Main({ switchTheme }: props) {
                   if (inputElement.current && cursorPositionStart) {
                     inputElement.current.selectionStart =
                       cursorPositionStart + 1;
+                    inputElement.current.focus();
                   }
                   addSign("↔");
                 }}
@@ -589,6 +575,7 @@ export default function Main({ switchTheme }: props) {
                   if (inputElement.current && cursorPositionStart) {
                     inputElement.current.selectionStart =
                       cursorPositionStart + 1;
+                    inputElement.current.focus();
                   }
                   addSign("¬");
                 }}
@@ -615,6 +602,52 @@ export default function Main({ switchTheme }: props) {
               Show Guide
             </Checkbox>
           </div>
+          {guide ? (
+            <div
+              className={
+                theme.type === "dark"
+                  ? "absolute left-4 top-40 z-30 rounded-xl bg-black"
+                  : "absolute left-4 top-40 z-30 rounded-xl bg-white"
+              }
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow className="mx-1 flex flex-row gap-6 px-1">
+                    <TableHead>Operator</TableHead>
+                    <TableHead>Symbol</TableHead>
+                    <TableHead>Meaning</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="mx-2 flex flex-row gap-10 text-center">
+                    <TableCell>Negation</TableCell>
+                    <TableCell>¬</TableCell>
+                    <TableCell className="px-6">NOT</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-6 text-center">
+                    <TableCell>Conjunction</TableCell>
+                    <TableCell>∧</TableCell>
+                    <TableCell className="px-9">AND</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-7 text-center">
+                    <TableCell>Disjunction</TableCell>
+                    <TableCell>∨</TableCell>
+                    <TableCell className="px-9">OR</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-7 text-center">
+                    <TableCell>Implication</TableCell>
+                    <TableCell>→</TableCell>
+                    <TableCell className="px-6">If/Then</TableCell>
+                  </TableRow>
+                  <TableRow className="mx-2 flex flex-row gap-4 text-center">
+                    <TableCell>Biconditional</TableCell>
+                    <TableCell>↔</TableCell>
+                    <TableCell className="px-5">If and only if</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
 
           {uniques && solve && values ? (
             <div className="flex flex-col items-center">
@@ -806,8 +839,8 @@ export default function Main({ switchTheme }: props) {
                 initialPage={1}
                 onChange={(page: number) => {
                   setIndex(page === 1 ? 1 : page * 100);
-                  mainElement.current?.scrollTo({
-                    top: 550,
+                  document.getElementById("main")?.scrollTo({
+                    top: solve ? 600 : 400,
                     behavior: "smooth",
                   });
                 }}
@@ -825,3 +858,12 @@ export default function Main({ switchTheme }: props) {
     </div>
   );
 }
+
+const getServerSideProps = async (context: any) => {
+  // util code is in the codeblock below this one
+  const { isMobile } = utilServerSideDeviceDetection(context);
+
+  return {
+    isMobile,
+  };
+};
