@@ -63,11 +63,15 @@ export default function Main({ switchTheme }: props) {
 
   const { setToast } = useToasts();
 
-  async () =>
+  const setMobile = async () => {
     setIsmobile(
       (await getServerSideProps(createContext("Default value"))).isMobile,
     );
-
+    // console.log(
+    //   "platform ",
+    //   (await getServerSideProps(createContext("Default value"))).isMobile,
+    // );
+  };
   //(A→(C→B))∧(¬D∨A)∧C∧D↔D→B
 
   const worker1 = useRef<Worker>();
@@ -122,7 +126,7 @@ export default function Main({ switchTheme }: props) {
   }, [uniques]);
 
   useEffect(() => {
-    console.log(values);
+    // console.log(values);
     if (values && inputFormula && uniques && solve)
       try {
         const res = solveAnyFormulaTry(
@@ -153,6 +157,7 @@ export default function Main({ switchTheme }: props) {
   }, [tableRes]);
 
   useEffect(() => {
+    setMobile();
     let numCores = navigator.hardwareConcurrency || 4;
     if (numCores > 1) {
       if (numCores % 2 !== 0) numCores--;
@@ -194,7 +199,7 @@ export default function Main({ switchTheme }: props) {
         } else {
           results[0] = event.data;
           finished();
-          console.log("worker1 ", event.data);
+          // console.log("worker1 ", event.data);
         }
       };
     if (worker2.current)
@@ -205,7 +210,7 @@ export default function Main({ switchTheme }: props) {
           results[1] = event.data;
 
           finished();
-          console.log("worker2 ", event.data);
+          // console.log("worker2 ", event.data);
         }
       };
     if (worker3.current)
@@ -215,7 +220,7 @@ export default function Main({ switchTheme }: props) {
         } else {
           results[2] = event.data;
           finished();
-          console.log("worker3 ", event.data);
+          // console.log("worker3 ", event.data);
         }
       };
     if (worker4.current)
@@ -226,7 +231,7 @@ export default function Main({ switchTheme }: props) {
           results[3] = event.data;
 
           finished();
-          console.log("worker4 ", event.data);
+          // console.log("worker4 ", event.data);
         }
       };
 
@@ -239,7 +244,7 @@ export default function Main({ switchTheme }: props) {
         } else {
           results[4] = event.data;
           finished();
-          console.log("worker5 ", event.data);
+          // console.log("worker5 ", event.data);
         }
       };
     if (worker6.current)
@@ -250,7 +255,7 @@ export default function Main({ switchTheme }: props) {
           results[5] = event.data;
 
           finished();
-          console.log("worker6 ", event.data);
+          // console.log("worker6 ", event.data);
         }
       };
 
@@ -261,7 +266,7 @@ export default function Main({ switchTheme }: props) {
         } else {
           results[6] = event.data;
           finished();
-          console.log("worker7 ", event.data);
+          // console.log("worker7 ", event.data);
         }
       };
     if (worker8.current)
@@ -272,7 +277,7 @@ export default function Main({ switchTheme }: props) {
           results[7] = event.data;
 
           finished();
-          console.log("worker8 ", event.data);
+          // console.log("worker8 ", event.data);
         }
       };
 
@@ -287,7 +292,7 @@ export default function Main({ switchTheme }: props) {
         isFinish = 0;
       }
     }
-    console.log("check ", numCores);
+    // console.log("check ", numCores);
 
     return () => {
       worker1.current?.terminate();
@@ -467,7 +472,7 @@ export default function Main({ switchTheme }: props) {
             <div
               className={
                 isMobile
-                  ? "absolute flex flex-row gap-2 px-52"
+                  ? "absolute flex flex-row gap-2 px-48"
                   : "absolute flex flex-row gap-2 px-96"
               }
             >
@@ -768,7 +773,7 @@ export default function Main({ switchTheme }: props) {
                       ? setTableRes(truthTable(formula, uniques))
                       : setLoading(true)
                     : null;
-                  console.log(maxProgress);
+                  // console.log(maxProgress);
                 }}
               >
                 Generate Truth Table
