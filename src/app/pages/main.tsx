@@ -455,7 +455,7 @@ export default function Main({ switchTheme }: props) {
         }
       />
       {isMobile ? (
-        <div className="absolute right-1 top-2 flex flex-row gap-2">
+        <div className="absolute right-1 top-2 z-50 flex flex-row gap-2">
           <Button
             // type="secondary"
             // ghost
@@ -632,8 +632,8 @@ export default function Main({ switchTheme }: props) {
             <div
               className={
                 theme.type === "dark"
-                  ? "absolute left-4 top-20 z-30 rounded-xl bg-black"
-                  : "absolute left-4 top-20 z-30 rounded-xl bg-white"
+                  ? "absolute left-4 top-20 z-50 rounded-xl bg-black"
+                  : "absolute left-4 top-20 z-50 rounded-xl bg-white"
               }
             >
               <Table>
