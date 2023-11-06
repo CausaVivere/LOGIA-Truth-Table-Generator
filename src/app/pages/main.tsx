@@ -454,6 +454,31 @@ export default function Main({ switchTheme }: props) {
             : "absolute z-0 h-3/5 w-3/5 rounded-xl bg-white outline outline-4 outline-black"
         }
       />
+      {isMobile ? (
+        <div className="absolute right-1 top-2 flex flex-row gap-2">
+          <Button
+            // type="secondary"
+            // ghost
+            px={0.6}
+            auto
+            onClick={() => {
+              setMode((last) => (last ? false : true));
+            }}
+          >
+            {truthMode ? "0/1" : "T/F"}
+          </Button>
+          <Button
+            // type="secondary"
+            // ghost
+            iconRight={theme.type === "dark" ? <Moon /> : <Sun />}
+            px={0.6}
+            auto
+            onClick={() => {
+              switchTheme();
+            }}
+          />
+        </div>
+      ) : null}
       <div
         className={
           (formula && solve) || (invalid && solve)
@@ -469,35 +494,31 @@ export default function Main({ switchTheme }: props) {
           }
         >
           <div className="sticky flex flex-row gap-3">
-            <div
-              className={
-                isMobile
-                  ? "absolute flex flex-row gap-2 px-48"
-                  : "absolute flex flex-row gap-2 px-96"
-              }
-            >
-              <Button
-                // type="secondary"
-                // ghost
-                px={0.6}
-                auto
-                onClick={() => {
-                  setMode((last) => (last ? false : true));
-                }}
-              >
-                {truthMode ? "0/1" : "T/F"}
-              </Button>
-              <Button
-                // type="secondary"
-                // ghost
-                iconRight={theme.type === "dark" ? <Moon /> : <Sun />}
-                px={0.6}
-                auto
-                onClick={() => {
-                  switchTheme();
-                }}
-              />
-            </div>
+            {!isMobile ? (
+              <div className="absolute flex flex-row gap-2 px-96">
+                <Button
+                  // type="secondary"
+                  // ghost
+                  px={0.6}
+                  auto
+                  onClick={() => {
+                    setMode((last) => (last ? false : true));
+                  }}
+                >
+                  {truthMode ? "0/1" : "T/F"}
+                </Button>
+                <Button
+                  // type="secondary"
+                  // ghost
+                  iconRight={theme.type === "dark" ? <Moon /> : <Sun />}
+                  px={0.6}
+                  auto
+                  onClick={() => {
+                    switchTheme();
+                  }}
+                />
+              </div>
+            ) : null}
             <Text h4>Enter your formula :</Text>
           </div>
 
@@ -659,11 +680,7 @@ export default function Main({ switchTheme }: props) {
               <div
                 className={
                   formula
-                    ? isMobile
-                      ? formula.length > 150
-                        ? " truncate break-all text-xs"
-                        : " break-all"
-                      : formula?.length > 500
+                    ? formula?.length > 500
                       ? " break-all text-xs"
                       : formula?.length > 250
                       ? " break-all text-sm"
@@ -674,6 +691,12 @@ export default function Main({ switchTheme }: props) {
                 {invalid ? (
                   <Text p type="error">
                     Invalid formula! Check syntax or forbidden characters.
+                  </Text>
+                ) : formula && isMobile ? (
+                  <Text p>
+                    {formula.length > 250
+                      ? formula.slice(0, 250) + "..."
+                      : formula}
                   </Text>
                 ) : (
                   <Text p>{formula}</Text>
