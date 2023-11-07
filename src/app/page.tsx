@@ -17,7 +17,7 @@ export default function HomePage() {
         <div className="gradient-background"></div>
         <div className="dots-overlay"></div>
       </div>
-      <div className="page-content">
+      <div id="main" className="page-content">
         <CssBaseline />
         <Main switchTheme={switchTheme} />
       </div>
