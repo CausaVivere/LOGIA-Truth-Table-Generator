@@ -158,16 +158,19 @@ export default function Main({ switchTheme }: props) {
 
   useEffect(() => {
     setMobile();
-    let numCores = navigator.hardwareConcurrency || 4;
+    let numCores = navigator.hardwareConcurrency
+      ? navigator.hardwareConcurrency
+      : 4;
     if (numCores > 1) {
       if (numCores % 2 !== 0) numCores--;
       if (uniques)
         if (Math.pow(2, uniques.length) % numCores !== 0) numCores -= 2;
     }
     for (let i = 0; i < numCores; i++) {
-      workers[i]!.current = new Worker(
-        new URL("../subworker.ts", import.meta.url),
-      );
+      if (workers[i])
+        workers[i]!.current = new Worker(
+          new URL("../subworker.ts", import.meta.url),
+        );
     }
 
     let isFinish = 0;
@@ -324,7 +327,9 @@ export default function Main({ switchTheme }: props) {
         // worker2.current?.postMessage(formula);
         // worker3.current?.postMessage(formula);
         // worker4.current?.postMessage(formula);
-        let numCores = navigator.hardwareConcurrency || 4;
+        let numCores = navigator.hardwareConcurrency
+          ? navigator.hardwareConcurrency
+          : 4;
         if (numCores > 1) {
           if (numCores % 2 !== 0) numCores--;
           if (uniques)
@@ -786,7 +791,9 @@ export default function Main({ switchTheme }: props) {
                   setTableRes([]);
 
                   setProgress(0);
-                  let numCores = navigator.hardwareConcurrency || 4;
+                  let numCores = navigator.hardwareConcurrency
+                    ? navigator.hardwareConcurrency
+                    : 4;
                   if (numCores > 1) {
                     if (numCores % 2 !== 0) numCores--;
                     if (uniques)
