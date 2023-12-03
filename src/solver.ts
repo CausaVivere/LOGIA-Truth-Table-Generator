@@ -167,7 +167,7 @@ export function solveAnyFormulaTry(
   for (let i = 0; i < formula.length; i++) {
     // console.log(formula, i, formula.length);
     if (
-      formula.length <= 3 &&
+      formula.length < 3 &&
       connectors.includes(formula[1]) &&
       uniqueLetters.includes(formula[0]) &&
       uniqueLetters.includes(formula[2])
