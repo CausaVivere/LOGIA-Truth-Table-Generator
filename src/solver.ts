@@ -167,7 +167,12 @@ export function solveAnyFormulaTry(
   for (let i = 0; i < formula.length; i++) {
     // console.log(formula, i, formula.length);
     if (
-      formula.length < 3 &&
+      (!uniqueLetters.includes(formula[0]) && formula.length <= 3) ||
+      (connectors.includes(formula[2]) && formula.length <= 3)
+    )
+      throw "Invalid formula!";
+    if (
+      formula.length <= 3 &&
       connectors.includes(formula[1]) &&
       uniqueLetters.includes(formula[0]) &&
       uniqueLetters.includes(formula[2])
@@ -480,6 +485,15 @@ function findUnique(str: string) {
 
 // check forwards 2
 export function formatFormula(theformula: string) {
+  const connectors = "∧∨→↔¬";
+  const uniqueLetters = getUniques(theformula).concat(["0", "1"]);
+  if (
+    (!uniqueLetters.includes(theformula[theformula.length - 1]) &&
+      theformula[theformula.length - 1] !== ")") ||
+    (connectors.includes(theformula[theformula.length - 1]) &&
+      theformula[theformula.length - 1] !== ")")
+  )
+    throw "Invalid formula!";
   return formatFormulaBasic(
     formatFormulaImp(formatFormulaDis(formatFormulaCon(theformula))),
   );
