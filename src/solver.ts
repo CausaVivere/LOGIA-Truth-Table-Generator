@@ -495,12 +495,15 @@ export function formatFormula(theformula: string) {
   )
     throw "Invalid formula!";
   return formatFormulaBasic(
-    formatFormulaImp(formatFormulaDis(formatFormulaCon(theformula))),
-  );
+    formatFormulaImp(
+      formatFormulaDis(formatFormulaCon(theformula.replace(/¬¬/g, ""))),
+    ),
+  ).replace(/undefined/g, "");
 }
 
 function formatFormulaCon(theformula: string) {
   let formula = theformula.replace(/\s/g, "");
+
   const uniqueLetters = getUniques(theformula).concat(["0", "1"]);
 
   const symbols = formula.match(/[∧]/g);
