@@ -98,10 +98,18 @@ export default function Main({ switchTheme }: props) {
     if (inputFormula) {
       const timeout = setTimeout(() => {
         setInvalid(false);
-
-        caseSens
-          ? setFormula(formatFormula(inputFormula))
-          : setFormula(formatFormula(inputFormula.toUpperCase()));
+        try {
+          caseSens
+            ? setFormula(formatFormula(inputFormula))
+            : setFormula(formatFormula(inputFormula.toUpperCase()));
+        } catch (err) {
+          setInvalid(true);
+          if (!solve)
+            setToast({
+              text: "Invalid formula! Check syntax or forbidden characters.",
+              type: "error",
+            });
+        }
       }, 300);
 
       return () => clearInterval(timeout);

@@ -1714,7 +1714,7 @@ function formatFormulaBasic(theformula: string) {
       } else if (formula[i - 1] === "(" && formula[i + 1] === ")") {
         formula = formula.replace(formula.substring(i - 1, i + 2), formula[i]);
       }
-    }
+    } else throw "Invalid formula!";
   }
   return formula.replace(/`/g, "");
 }
